@@ -1,0 +1,114 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+header {
+    display: flex;
+    position: fixed;
+    width: 100vw;
+    top: 0;
+    left: 0;
+    background-color: seagreen;
+    height: 64px;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 5px solid black;
+}
+
+header h1 {
+    font-family: "Courier New", "monospace";
+    margin-left: 25px;
+}
+
+header h1 span {
+    font-size: 0.4em;
+    font-style: italic;
+}
+
+header nav {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.header-btns {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border: 3px solid black;
+    border-radius: 15px;
+    background-color: lightseagreen;
+    box-shadow: 2px 4px rgb(0,0,0,90%);
+    margin: 0 5px 4px 5px
+}
+
+#github-logo {
+    width: 40px;
+    height: 40px;
+}
+
+#info-icon {
+    width: 25px;
+    height: 25px;
+}
+
+.header-btns:hover {
+    transform: translate(2px, 1px);
+    box-shadow: 1px 2px rgb(0,0,0,90%);
+}
+
+.header-btns:active {
+    transform: translate(4px, 2px);
+    box-shadow: 0 0;
+}
+
+#info {
+    display: none;
+    position: absolute;
+    width: 50vw;
+    top: 20vh;
+    left: 25vw;
+    border: 8px solid mediumseagreen;
+    padding: 8px;
+    box-shadow: 0 15px 30px rgb(0,0,0,30%);
+}
+
+#info p {
+    margin-top: 15px;
+}
+
+#info p a {
+    text-decoration: none;
+}
+
+#info p a:hover {
+    text-decoration: underline;
+}
+
+.show {
+    display: block !important;
+    animation: fadeIn 0.3s ease-in forwards;
+}
+
+.hide {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 100%;}
+}
+
+@keyframes fadeOut {
+    from {opacity: 100%}
+    to {opacity: 0}
+}
+
+body {
+    background-color: lightseagreen;
+}
