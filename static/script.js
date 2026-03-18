@@ -22,3 +22,24 @@ document.addEventListener('click', (e) => {
         }
     }
 });
+
+
+//API SECTION
+async function sendMessage(userInput) {
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: userInput})
+    });
+
+    const data = await response.json();
+    return data.reply;
+}
+
+async function test() {
+    const userInput = prompt("Say what to the chatbot?");
+    const reply = await sendMessage(userInput);
+    alert(reply);
+}

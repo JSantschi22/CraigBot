@@ -28,6 +28,7 @@ STORAGE = "../storage"
 
 if os.path.exists(STORAGE): #if we already stored the vectors
     storage_context = StorageContext.from_defaults(persist_dir=STORAGE)
+    print("loading indexes from storage...")
     index = load_index_from_storage(storage_context)
 else: #if we haven't stored them yet, build them
     documents = SimpleDirectoryReader("../documents").load_data()
