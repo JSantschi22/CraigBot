@@ -1,0 +1,15 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# LlamaIndex generated storage
+storage/
+
+# PyCharm
+.idea/
+*.iml
