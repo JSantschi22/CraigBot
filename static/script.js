@@ -27,17 +27,50 @@ document.addEventListener('click', (e) => {
 
 
 //API SECTION
-async function sendMessage(userInput) {
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+async function sendMessage(userInput, chatWindow) {
+    console.log("send fired");
     const response = await fetch("/chat", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: userInput})
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userInput })
     });
 
-    const data = await response.json();
-    return data.reply;
+    console.log("before we make the element");
+    const botp = document.createElement('p');
+    botp.classList.add('bot-msg');
+    chatWindow.appendChild(botp);
+
+    console.log("before we make fullText");
+    let fullText = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    console.log("pre loop")
+    while (true) {
+        const { done, value } = await reader.read();
+        console.log("done:", done, "value", value);
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter(l => l.startsWith('data:'));
+
+        for (const line of lines) {
+            console.log(JSON.stringify(line));
+            const data = line.slice(6).trim();
+            console.log(JSON.stringify(data));
+            if (!data || data === '[DONE]') continue;
+            try {
+                const parsed = JSON.parse(data);
+                fullText += parsed.delta;
+                botp.innerHTML = marked.parse(fullText);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                await sleep(50);
+            } catch (e) {
+                // incomplete chunk, skip it
+            }
+        }
+    }
 }
 
 //CHAT WINDOW LOGIC
@@ -54,22 +87,16 @@ textarea.addEventListener('keydown', function(e) {
     }
 });
 
-const firstMsg = true;
 const chat = document.querySelector("#input-form");
 chat.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log("submit fired");
     let userInp = document.querySelector("#user-input");
-    if (!userInp.value)
-        return;
+    if (!userInp.value) return;
     let toSend = userInp.value;
     userInp.value = '';
     const chatWindow = document.querySelector("#chat-window");
-    if (firstMsg === true)
-        chatWindow.insertAdjacentHTML('beforeend', `<p class="user-msg first-msg">${toSend}</p>`);
-    else
-        chatWindow.insertAdjacentHTML('beforeend', `<p class="user-msg">${toSend}</p>`);
+    chatWindow.insertAdjacentHTML('beforeend', `<p class="user-msg">${toSend}</p>`);
     chatWindow.scrollTop = chatWindow.scrollHeight;
-    const reply = await sendMessage(toSend);
-    chatWindow.insertAdjacentHTML('beforeend', `<div class="bot-msg">${marked.parse(reply)}</div>`);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
+    await sendMessage(toSend, chatWindow);
 });
