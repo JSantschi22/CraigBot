@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CraigBot</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js" defer></script>
 </head>
 <div id="info">
+    <button id="info-close">&times;</button>
     <h2>About CraigBot</h2>
     <p>
         CraigBot was built by Jeffrey Santschi for his ultimate team
@@ -15,7 +18,7 @@
         USA ultimate ruleset, as well as the MODS' amendments for play in Manitoba.
     </p>
     <p>
-        You can find the source code by clicking the Github link in the header, or
+        You can find the source code by clicking the GitHub link in the header, or
         by clicking <a href="https://github.com/JSantschi22/CraigBot">here</a>.
     </p>
     <p>
@@ -31,12 +34,24 @@
     </p>
 </div>
 <body>
-<header>
-    <h1>CraigBot <span>By Jeffrey Santschi</span></h1>
-    <nav>
-        <a href="https://github.com/JSantschi22/CraigBot" class="header-btns"><img id="github-logo" src="images/github-logo.png" alt="github logo"/></a>
-        <button class="header-btns" id="info-btn"><img id="info-icon" src="images/info-icon.png" alt="info"/></button>
-    </nav>
-</header>
+    <header>
+        <h1>CraigBot <span>By Jeffrey Santschi</span></h1>
+        <nav>
+            <a href="https://github.com/JSantschi22/CraigBot" class="header-btns"><img id="github-logo" src="images/github-logo.png" alt="github logo"/></a>
+            <button class="header-btns" id="info-btn"><img id="info-icon" src="images/info-icon.png" alt="info"/></button>
+        </nav>
+    </header>
+    <div id="chat-box">
+        <div id="chat-window">
+        </div>
+        <form id="input-form">
+            <label for="user-input"></label>
+            <textarea autocomplete="off" id="user-input" name="user-input" placeholder="say something..."></textarea>
+            <div class="submit-wrapper">
+                <label for="send-input"></label>
+                <input type="image" src="images/send-icon.png" alt="send" id="send-input" name="send-input">
+            </div>
+        </form>
+    </div>
 </body>
 </html>
