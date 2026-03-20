@@ -4,22 +4,27 @@ from rag import search_tool
 from dotenv import load_dotenv
 from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.core.workflow import Context
-from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core.memory import Memory
 from llama_index.llms.groq import Groq
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from utils import _load_session, _save_session, _get_history
 
+#the blueprint for the frontend user message JSON
 class ChatRequest(BaseModel):
     message: str
+    session_id: str
 
+#set the api
 app = FastAPI()
 
+#grab the model info
 load_dotenv()
 api_key = os.getenv('GROQ_API_KEY')
 model = "meta-llama/llama-4-scout-17b-16e-instruct"
-memory = ChatMemoryBuffer.from_defaults(token_limit=8000)
+memory = Memory.from_defaults(token_limit=8000)
 
 #THE CraigBot
 agent = FunctionAgent(
@@ -41,19 +46,35 @@ agent = FunctionAgent(
     """
 )
 
-ctx = Context(agent)
+
+#create the session memory
+sessions = {}
 
 @app.post("/chat")
-async def chat(request: ChatRequest):
-    async def generate():
-        handler = agent.run(request.message, ctx=ctx)
-        async for event in handler.stream_events():
-            if hasattr(event, 'delta') and event.delta:
-                data = json.dumps({"delta":event.delta})
-                yield f"data: {data}\n\n"
-        yield "data: [DONE]\n\n"
+async def _chat(request: ChatRequest, background_tasks: BackgroundTasks):
+    """The API POST for the main cbot conversation"""
+    loaded = await _load_session(request.session_id, agent) #try to load the session
+    session = loaded if loaded else { #if no session history then create new session
+        "ctx" : Context(agent),
+        "memory" : Memory.from_defaults(token_limit=8000)
+    }
+    async def generate(): #creates the content of the token stream
+        handler = agent.run(request.message, ctx=session["ctx"], memory=session["memory"]) #send msg and get response stream
+        async for event in handler.stream_events(): #for every token in response stream
+            if hasattr(event, 'delta') and event.delta: #if it is a text token and the text is not empty
+                data = json.dumps({"delta":event.delta}) #serialize it into a JSON object
+                yield f"data: {data}\n\n" #send each back
+        yield "data: [DONE]\n\n" #once the stream is complete send [DONE] to signify
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    background_tasks.add_task(_save_session, request.session_id, session) #save the session after stream completes
+
+    return StreamingResponse(generate(), media_type="text/event-stream") #send the tokens from generate, as a stream
+
+@app.get("/history")
+async def get_history(session_id: str):
+    """The API GET method for a users message history"""
+    history = _get_history(session_id)
+    return {"history" : history}
 
 #mount last
 app.mount("/", StaticFiles(directory="../static", html=True), name='static')

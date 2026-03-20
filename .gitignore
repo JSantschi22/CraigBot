@@ -13,3 +13,6 @@ storage/
 # PyCharm
 .idea/
 *.iml
+
+# Chat History
+sessions/
