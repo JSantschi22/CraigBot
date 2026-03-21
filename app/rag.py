@@ -122,16 +122,17 @@ else: #if we haven't stored them yet, build them
     index = _build_indexes(STORAGE)
 
 #Create the query engine from the indexes
-query_engine = index.as_query_engine()
+query_engine = index.as_query_engine(similarity_top_k=6)
 
 #the base function that searches our indexes
 async def search_documents(query: str) -> str:
     response = await query_engine.aquery(query)
+    print(response)
     return str(response)
 
 #the tool wrapper for the query function
 search_tool = FunctionTool.from_defaults(
     fn=search_documents,
     name="search_documents",
-    description="Searches through the indexes for information."
+    description="Searches through the indexes for information. Provide the information in readable form."
 )

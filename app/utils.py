@@ -11,7 +11,7 @@ def _save_session(session_id, session):
     """Saves the users session to a JSON file in the sessions folder"""
     path = SESSIONS_DIR / f"{session_id}.json"
     messages = session["memory"].get_all()
-    history = [{"role": m.role.value, "content": m.content} for m in messages]
+    history = [{"role": m.role.value, "content": m.content} for m in messages if m.role.value in ("user", "assistant")]
     with open(path, "w") as f:
         json.dump(history, f)
 
@@ -26,7 +26,6 @@ async def _load_session(session_id, agent):
         memory = Memory.from_defaults(token_limit=8000, session_id=session_id)
         memory.put_messages(messages)
         ctx = Context(agent)
-        print(ctx.store)
         await ctx.store.set("memory", memory)
         return {"ctx": Context(agent), "memory": memory}
     return None

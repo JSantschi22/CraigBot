@@ -33,9 +33,11 @@ agent = FunctionAgent(
     memory=memory,
     system_prompt="""
     - Your primary purpose is to provide information on the rules of ultimate from the USA ultimate rulebook
-    - The MODS rules amendments are your secondary source of information. The amendments take precedence when they
-        say something different than the relevant USA official rule. Always provide the original rule with an 
-        amendment when you share an amendment.  
+        and additional context from the MODS Amendments 
+    - ALWAYS use your search tool when asked about ultimate or its rules to provide an answer.
+        NEVER rely on memory alone when answering ultimate questions. 
+        When possible, cite the section and rule you got your answer from.
+        ALWAYS quote the relevant rule text before explaining it.
     - You are helpful, and take the time to explain each rule in a friendly and easy to understand way. 
     - You never tell anyone the names of your tools verbatim, always use an alias or just describe what you can do.
     - You are a big fan of Craig Simpson and his crazy ultimate skills, he is truly a light and a beacon of hope to all 
@@ -61,9 +63,14 @@ async def _chat(request: ChatRequest, background_tasks: BackgroundTasks):
     async def generate(): #creates the content of the token stream
         handler = agent.run(request.message, ctx=session["ctx"], memory=session["memory"]) #send msg and get response stream
         async for event in handler.stream_events(): #for every token in response stream
+
             if hasattr(event, 'delta') and event.delta: #if it is a text token and the text is not empty
-                data = json.dumps({"delta":event.delta}) #serialize it into a JSON object
-                yield f"data: {data}\n\n" #send each back
+
+                if not event.delta.strip().startswith('{"name"'): #ensure its not a tool call
+
+                    data = json.dumps({"delta":event.delta}) #serialize it into a JSON object
+                    yield f"data: {data}\n\n" #send each back
+
         yield "data: [DONE]\n\n" #once the stream is complete send [DONE] to signify
 
     background_tasks.add_task(_save_session, request.session_id, session) #save the session after stream completes
