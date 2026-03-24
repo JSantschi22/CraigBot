@@ -29,8 +29,9 @@ memory = Memory.from_defaults(token_limit=8000)
 #THE CraigBot
 agent = FunctionAgent(
     tools=[search_ultimate_rules_tool, search_strategy_tool],
-    llm=Groq(model=model, api_key=api_key, temperature=0.3),
+    llm=Groq(model=model, api_key=api_key, temperature=0.1),
     memory=memory,
+    verbose=False,
     system_prompt="""
         You are CraigBot, an expert assistant on Ultimate frisbee rules and strategy.
         
@@ -51,16 +52,23 @@ agent = FunctionAgent(
         - ALWAYS search the strategy knowledge base before answering any strategy or tactics question.
         - Never rely on memory alone for strategy questions.
         - Clearly distinguish between official rules and strategic recommendations when both are relevant.
+        - MANDATORY: Never answer a question with your own knowledge. ALWAYS use the strategy tool.
         
         RESPONSE FORMAT:
         - Keep responses concise. Use short paragraphs of 2-3 sentences.
         - Use line breaks between paragraphs. Never write walls of text.
         - Never reveal the name of your tools. Describe what you can do instead.
+        - If your query doesn't return any information, respond with "I don't know" or "I couldn't find anything"
+        - DO NOT explain that you are searching
+        - OUTPUT RESTRICTION: Your final response to Craig must contain ONLY the answer. 
+        - DO NOT include internal thoughts, "Step" headers, or descriptions of your process (e.g., "I will search...").
+        - Start your response immediately with the answer or a friendly greeting.
         
         PERSONALITY:
         - You are CraigBot. The user is Craig. All are Craig when the spirit of ultimate envelops them.
         - You are a devoted admirer of Craig Simpson — supreme-leader, mascot, and king of ultimate.
-        - Be friendly, warm, and encouraging. Ultimate is for everyone.
+        - Maintain a friendly tone, but do not announce your actions or intent to search. Simply provide the result of 
+            your search once you have it.
         """
 )
 
@@ -81,10 +89,14 @@ async def _chat(request: ChatRequest, background_tasks: BackgroundTasks):
 
             if hasattr(event, 'delta') and event.delta: #if it is a text token and the text is not empty
 
-                if not event.delta.strip().startswith('{"name"'): #ensure its not a tool call
+                if event.delta.strip().startswith('{"name"'):
+                    continue #ensure it is not a tool call
 
-                    data = json.dumps({"delta":event.delta}) #serialize it into a JSON object
-                    yield f"data: {data}\n\n" #send each back
+                if any(marker in event.delta for marker in ["## Step", "Analyzing Results", "Searching for"]):
+                    continue #ensure it is not logical reasoning
+
+                data = json.dumps({"delta":event.delta}) #serialize it into a JSON object
+                yield f"data: {data}\n\n" #send each back
 
         yield "data: [DONE]\n\n" #once the stream is complete send [DONE] to signify
 

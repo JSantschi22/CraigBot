@@ -1,19 +1,31 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
+from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core import (VectorStoreIndex,
-                              SimpleDirectoryReader,
-                              StorageContext,
-                              load_index_from_storage,
-                              get_response_synthesizer,
-                              Settings,
-                              Document,
-                              PromptTemplate)
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    StorageContext,
+    load_index_from_storage,
+    get_response_synthesizer,
+    Settings,
+    Document,
+    PromptTemplate
+)
+from llama_index.core.extractors import (
+    TitleExtractor,
+    QuestionsAnsweredExtractor,
+    SummaryExtractor,
+    KeywordExtractor
+)
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.llms.groq import Groq
 from llama_index.core.tools import FunctionTool
+from llama_index.readers.file import PptxReader
 import requests
 from bs4 import BeautifulSoup
 
@@ -32,6 +44,22 @@ def _table_extractor(table):
     table_text = "\n".join(lines)
 
     return table_text
+
+def pipeline(documents):
+    """
+    Uses LLM calls to extract metadata for a list of documents and returns a list of nodes.
+    Currently, not being used as it takes a lot of API calls.
+    """
+    transformations = [
+        SentenceSplitter(chunk_size=1024, chunk_overlap=20),
+        TitleExtractor(nodes=5),
+        SummaryExtractor(summaries=["self"]),
+        KeywordExtractor(keywords=5),
+        QuestionsAnsweredExtractor(questions=3)
+    ]
+    pipeline = IngestionPipeline(transformations=transformations)
+    print("Piping through the pipeline...")
+    return pipeline.run(documents=documents, show_progress=True)
 
 def _usa_ultimate_rules_scraper():
     """Scrapes all the documentation from 'usaultimate.org' into Documents for vector indexing"""
@@ -113,7 +141,7 @@ def _build_rules_index(storage):
     """Builds the rules vector indexes"""
     #Set the chunking settings
     Settings.chunk_size = 512
-    Settings.chunk_overlap = 100
+    Settings.chunk_overlap = 150
 
     #Pull data from the documents folder and webpage
     documents = SimpleDirectoryReader("../documents/rules").load_data()
@@ -129,11 +157,26 @@ def _build_rules_index(storage):
 def _build_strategy_index(storage):
     """Builds the strategy vector index"""
     #Set the chunking settings
-    Settings.chunk_size = 256
-    Settings.chunk_overlap = 60
+    Settings.chunk_size = 1000
+    Settings.chunk_overlap = 0
 
     #read the documents from the directory
-    documents = SimpleDirectoryReader("../documents/strategy").load_data()
+    #documents = SimpleDirectoryReader("../documents/strategy").load_data()
+    loader = PptxReader()
+    documents = []
+    pps = Path("../documents/strategy/")
+    for pptx in pps.glob("*.pptx"):
+        slides = loader.load_data(file=pptx)
+        for i, slide in enumerate (slides):
+            doc = Document(
+                text=slide.text,
+                metadata={
+                    "file_name": pptx.name,
+                    "slide_number": i + 1,
+                    "full_path": str(pptx)
+                }
+            )
+            documents.append(doc)
 
     print("building strategy index...")
 
@@ -149,7 +192,7 @@ model = "llama-3.3-70b-versatile"
 
 #Sets Llama to use huggingface and groq instead of the default
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-Settings.llm = Groq(model=model, api_key=api_key)
+Settings.llm = Groq(model=model, api_key=api_key, temperature=0.1)
 
 #where to store the vectors
 RULES_STORAGE = "../storage/rules"
@@ -168,14 +211,14 @@ else:
     strategy_index = _build_strategy_index(STRATEGY_STORAGE)
 
 #Create the reranking postprocessor
-postprocessor = SentenceTransformerRerank(top_n=3)
+postprocessor = SentenceTransformerRerank(top_n=4)
 
 #Get the response synthesizer
 response_synthesizer = get_response_synthesizer(response_mode="compact")
 
 #Create the retrievers from the indexes
-rules_retriever = VectorIndexRetriever(index=rules_index, similarity_top_k=3, postprocessor=postprocessor)
-strategy_retriever = VectorIndexRetriever(index=strategy_index, similarity_top_k=3, postprocessor=postprocessor)
+rules_retriever = VectorIndexRetriever(index=rules_index, similarity_top_k=10, postprocessor=postprocessor)
+strategy_retriever = VectorIndexRetriever(index=strategy_index, similarity_top_k=10, postprocessor=postprocessor)
 
 #Assemble the query functions
 rules_vector_query_engine = RetrieverQueryEngine(
@@ -241,23 +284,16 @@ async def search_strategy_documents(query: str) -> str:
 search_ultimate_rules_tool = FunctionTool.from_defaults(
     fn=search_rules_documents,
     name="search_ultimate_rules",
-    description="""Search the Ultimate frisbee rules knowledge base. 
-    Use this tool for ANY question about Ultimate rules, gameplay, definitions, 
-    violations, fouls, scoring, field dimensions, or MODS amendments. 
-    Always use this tool before answering rules questions — never rely on general knowledge alone.
-    Pass a specific, detailed query for best results (e.g. 'stall count rules section 15' 
-    rather than just 'stalling')."""
+    description="""MANDATORY: Use this tool to retrieve official USA Ultimate and MODS rules. 
+    Do not guess. Do not provide a response until you have called this tool. 
+    Required for questions on: fouls, stall counts, scoring, and field dimensions."""
 )
 
 search_strategy_tool = FunctionTool.from_defaults(
     fn=search_strategy_documents,
     name="search_ultimate_strategy",
-    description="""Search the Ultimate frisbee strategy and plays knowledge base.
-    Use this tool for ANY question about offensive or defensive strategies, plays, 
-    formations, cutting patterns, handler resets, end zone plays, force positions, 
-    or general team tactics and coaching concepts.
-    Do NOT use this tool for questions about official rules or regulations — use the rules tool for those.
-    Pass specific descriptive queries for best results (e.g. 'vertical stack cutting patterns' 
-    rather than just 'offense')."""
+    description="""MANDATORY: Use this tool to retrieve specific team plays and strategy. 
+    Required for queries regarding: 'Cinch', 'Blobbing', 'Vertical Flow', and 'H1/H2' sets. 
+    You MUST call this tool before answering any strategy question to ensure accuracy."""
 )
 #reload

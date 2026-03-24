@@ -232,7 +232,7 @@ body {
 }
 
 #chat-window p {
-    margin-top: 10px;
+    margin-top: 0.75rem;
 }
 
 .first-msg {
@@ -242,7 +242,7 @@ body {
 .user-msg {
     display: block;
     background-color: rgb(0,0,0,15%);
-    padding: 8px 12px 8px 12px;
+    padding: 0.5rem 0.75rem;
     border-radius: 8px;
     width: fit-content;
     max-width: 65%;
@@ -259,10 +259,17 @@ body {
     text-wrap: wrap;
     overflow-wrap: break-word;
     line-height: 1.5rem;
+    padding-left: 0.5rem;
 }
 
 .bot-msg p {
-    margin-top: 12px;
+    margin-top: 2rem;
+}
+
+
+.bot-msg ul, .bot-msg ol {
+    margin: 0.5rem 0 0.5rem 0;
+    padding-left: 2rem;
 }
 
 /* Responsive Design Section */

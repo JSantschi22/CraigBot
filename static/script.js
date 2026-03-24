@@ -121,7 +121,10 @@ async function loadHistory() {
         if (m.role === 'user') {
             chatWindow.insertAdjacentHTML('beforeend', `<p class="user-msg">${m.content}</p>`);
         } else if (m.role === 'assistant') {
-            chatWindow.insertAdjacentHTML('beforeend', `<p class="bot-msg">${m.content}</p>`);
+            const bot_p = document.createElement('p');
+            bot_p.classList.add('bot-msg');
+            bot_p.innerHTML = marked.parse(m.content)
+            chatWindow.appendChild(bot_p);
         }
     }
     chatWindow.scrollTop = chatWindow.scrollHeight;
