@@ -159,7 +159,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 85%;
-    padding: 0 15px 0 15px;
+    padding: 0 25px 0 15px;
     overflow-y: auto;
     overflow-x: hidden;
     -ms-overflow-style: none;  /* IE and Edge */
@@ -280,5 +280,15 @@ body {
     #chat-box {
         width: 100vw;
         font-size: 1rem;
+        border: 5px solid #DDBA80;
+        border-top: 0;
+        border-radius: 0;
+        margin-top: 64px;
     }
+
+    header {
+        margin-bottom: 0;
+    }
+
+
 }

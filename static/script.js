@@ -1,7 +1,18 @@
 //Get/create the session ID
+function generateUUID() {
+    if (crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    // fallback for non-secure contexts
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+}
+
 let session_id = localStorage.getItem('craigbot_session_id');
 if (!session_id) {
-    session_id = crypto.randomUUID();
+    session_id = generateUUID();
     localStorage.setItem('craigbot_session_id', session_id);
 }
 
