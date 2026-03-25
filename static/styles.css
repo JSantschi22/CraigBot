@@ -251,7 +251,7 @@ body {
     overflow-wrap: break-word;
 }
 
-.bot-msg {
+.assistant-msg {
     display: block;
     width: fit-content;
     max-width: 75%;
@@ -262,12 +262,12 @@ body {
     padding-left: 0.5rem;
 }
 
-.bot-msg p {
+.assistant-msg p {
     margin-top: 2rem;
 }
 
 
-.bot-msg ul, .bot-msg ol {
+.assistant-msg ul, .assistant-msg ol {
     margin: 0.5rem 0 0.5rem 0;
     padding-left: 2rem;
 }

@@ -66,16 +66,16 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  * @returns {Promise<void>}
  */
 async function sendMessage(userInput, chatWindow) {
-    const response = await fetch("/chat", { //sends the user's message to the backend
+    const response = await fetch("/v1/query", { //sends the user's message to the backend
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userInput, session_id: session_id }) //send the message and the ID
     }); //gets back a JSON with the bots reply
 
     //Create a new p to put the bots response in and add it to the chat window
-    const bot_p = document.createElement('p');
-    bot_p.classList.add('bot-msg');
-    chatWindow.appendChild(bot_p);
+    const a_p = document.createElement('p');
+    a_p.classList.add('assistant-msg');
+    chatWindow.appendChild(a_p);
 
     //Create a variable to add the token-by-token response to and a stream reading setup
     let fullText = '';
@@ -97,7 +97,7 @@ async function sendMessage(userInput, chatWindow) {
             try { //try and parse the JSON object from the response
                 const parsed = JSON.parse(data);
                 fullText += parsed.delta; //add the delta value (the bots response)
-                bot_p.innerHTML = marked.parse(fullText); //replace the p's content with updated text
+                a_p.innerHTML = marked.parse(fullText); //replace the p's content with updated text
                 chatWindow.scrollTop = chatWindow.scrollHeight; //ensure chat window is always at lowest point
                 await sleep(50); //pause between each token for UX effect
             } catch (e) {
@@ -121,10 +121,10 @@ async function loadHistory() {
         if (m.role === 'user') {
             chatWindow.insertAdjacentHTML('beforeend', `<p class="user-msg">${m.content}</p>`);
         } else if (m.role === 'assistant') {
-            const bot_p = document.createElement('p');
-            bot_p.classList.add('bot-msg');
-            bot_p.innerHTML = marked.parse(m.content)
-            chatWindow.appendChild(bot_p);
+            const a_p = document.createElement('p');
+            a_p.classList.add('assistant-msg');
+            a_p.innerHTML = marked.parse(m.content)
+            chatWindow.appendChild(a_p);
         }
     }
     chatWindow.scrollTop = chatWindow.scrollHeight;

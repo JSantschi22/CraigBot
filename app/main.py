@@ -75,7 +75,7 @@ agent = FunctionAgent(
 #create the session memory
 sessions = {}
 
-@app.post("/chat")
+@app.post("/v1/query")
 async def _chat(request: ChatRequest, background_tasks: BackgroundTasks):
     """The API POST for the main cbot conversation"""
     loaded = await _load_session(request.session_id, agent) #try to load the session
