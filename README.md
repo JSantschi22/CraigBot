@@ -7,3 +7,5 @@ The name CraigBot comes from beloved player and coach, Craig Simpson.
 
 Rules: https://usaultimate.org/rules/
 Amendments: https://mods.mb.ca/about/rules/
+
+Live on craigbot.ca
