@@ -1,0 +1,15 @@
+nohup: ignoring input
+2026-03-25 06:39:41,725 - INFO - Load pretrained SentenceTransformer: BAAI/bge-small-en-v1.5
+2026-03-25 06:39:45,211 - INFO - 1 prompt is loaded, with the key: query
+2026-03-25 06:39:49,143 - INFO - Loading all indices.
+2026-03-25 06:39:50,247 - INFO - Loading all indices.
+INFO:     Started server process [1543]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+loading rules index from storage...
+loading strategy index from storage...
+INFO:     24.79.224.121:58217 - "GET / HTTP/1.1" 304 Not Modified
+INFO:     24.79.224.121:58217 - "GET /history?session_id=4483cba3-51bd-4242-81ce-e7a4190c7afe HTTP/1.1" 200 OK
+INFO:     24.79.224.121:55988 - "POST /chat HTTP/1.1" 200 OK
+2026-03-25 06:40:07,046 - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

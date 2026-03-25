@@ -150,7 +150,7 @@ def _build_rules_index(storage):
     print("building rules index...")
 
     #build and store the actual indexes
-    _index = VectorStoreIndex.from_documents(documents, show_progress=True)
+    _index = VectorStoreIndex.from_documents(documents, show_progress=True, embed_batch_size=10)
     _index.storage_context.persist(persist_dir=storage)
     return _index
 
@@ -181,7 +181,7 @@ def _build_strategy_index(storage):
     print("building strategy index...")
 
     #build and store the indexes
-    _index = VectorStoreIndex.from_documents(documents, show_progress=True)
+    _index = VectorStoreIndex.from_documents(documents, show_progress=True, embed_batch_size=10)
     _index.storage_context.persist(persist_dir=storage)
     return _index
 
